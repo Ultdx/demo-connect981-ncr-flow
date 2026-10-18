@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+!apps/web/.env.production
+deployment/*.local.conf
+*.log
+.DS_Store
+.cache/
+playwright-report/
+test-results/
+# Private certificates and signing keys must stay outside the repository.
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519

@@ -1,0 +1,228 @@
+query Operations($siteId: ID, $severity: Severity) {
+  sites {
+    id
+    code
+    name
+    country
+  }
+  operationsOverview(siteId: $siteId, severity: $severity) {
+    openNcrCount
+    staleDays
+    stageCounts {
+      stage
+      count
+    }
+    ncrs {
+      id
+      number
+      stage
+      severity
+      defectCode
+      quantityAffected
+      stageEnteredAt
+      site {
+        code
+      }
+      workOrder {
+        number
+      }
+      lot {
+        lotNumber
+      }
+    }
+    heldLots {
+      id
+      lotNumber
+      hold {
+        reason
+      }
+    }
+    staleNcrs {
+      id
+      number
+      stage
+      stageEnteredAt
+    }
+  }
+}
+
+query NcrDetail($id: ID!) {
+  ncr(id: $id) {
+    id
+    number
+    stage
+    state
+    severity
+    workflowVersion
+    partNumber
+    revision
+    operationStep
+    defectCode
+    detectionSource
+    quantityAffected
+    evidence
+    containmentAction
+    disposition
+    engineeringInstructions
+    verificationNote
+    lastEventSeq
+    stageEnteredAt
+    mrbApproval {
+      role
+      at
+    }
+    site {
+      code
+      name
+    }
+    workOrder {
+      number
+      orderRef
+    }
+    lot {
+      lotNumber
+      hold {
+        active
+        reason
+      }
+    }
+    serials {
+      serialNumber
+      hold {
+        active
+      }
+    }
+    availableActions {
+      action
+      allowed
+      blockedBy
+    }
+    events {
+      id
+      seq
+      type
+      actorRole
+      actorUsername
+      reason
+      at
+      workflowVersion
+      action
+      fromStage
+      toStage
+    }
+  }
+}
+
+query LotThread($lotNumber: String!) {
+  lotThread(lotNumber: $lotNumber) {
+    id
+    lotNumber
+    partNumber
+    receivedAt
+    supplier {
+      name
+      status
+    }
+    certificate {
+      number
+      type
+      url
+      issuedAt
+    }
+    hold {
+      active
+      reason
+      placedAt
+      placedByRole
+    }
+    workOrders {
+      id
+      number
+      partNumber
+      site {
+        code
+        name
+      }
+      hold {
+        active
+      }
+      serials {
+        id
+        serialNumber
+        hold {
+          active
+        }
+      }
+    }
+    serials {
+      id
+      hold {
+        active
+      }
+    }
+    ncrs {
+      id
+      number
+      stage
+      defectCode
+      severity
+      site {
+        code
+      }
+    }
+  }
+}
+
+query CreationOptions {
+  workOrders {
+    id
+    number
+    partNumber
+    revision
+    consumedLots {
+      lotId
+      qty
+    }
+    lots {
+      id
+      lotNumber
+    }
+    operations {
+      step
+      name
+    }
+  }
+  erpCatalog {
+    parts {
+      partNumber
+      description
+      revisions
+    }
+  }
+}
+
+mutation CreateNcr($input: CreateNcrInput!) {
+  createNcr(input: $input) {
+    id
+    number
+  }
+}
+mutation TransitionNcr($input: TransitionNcrInput!) {
+  transitionNcr(input: $input) {
+    id
+    lastEventSeq
+    stage
+  }
+}
+mutation ContainLot($input: ContainLotInput!) {
+  containLot(input: $input) {
+    lotsPlacedOnHold
+    bySite {
+      site {
+        code
+      }
+      workOrders
+      serials
+    }
+  }
+}

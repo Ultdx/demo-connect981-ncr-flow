@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MONGOMS_DISABLE_POSTINSTALL: '1'
+      MONGOMS_VERSION: '7.0.24'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run codegen
+      - name: Verify generated files are committed
+        run: git diff --exit-code -- apps/api/src/generated apps/web/src/gql
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+      - name: Configure disposable environment for Compose build validation
+        run: |
+          node --input-type=module <<'NODE'
+          import { randomBytes } from 'node:crypto';
+          import { appendFileSync } from 'node:fs';
+          // This URI placeholder is used only to validate/build Compose, never to connect.
+          appendFileSync(process.env.GITHUB_ENV, `DEMO_USERNAME=ci-demo-user\nDEMO_PASSWORD=${randomBytes(24).toString('hex')}\nDOCKER_MONGO_URI=unused-for-build-validation\n`);
+          NODE
+      - run: docker compose config --quiet
+      - run: docker compose build
+
+  portable:
+    name: Install, test, and build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    env:
+      MONGOMS_DISABLE_POSTINSTALL: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

@@ -1,0 +1,10 @@
+{
+  "parts": [
+    { "partNumber": "SEAL-A320", "description": "Elastomer sealing ring", "revisions": ["C"] },
+    { "partNumber": "BRACKET-42", "description": "Machined mounting bracket", "revisions": ["B"] }
+  ],
+  "purchaseOrders": [
+    { "number": "PO-2026-410", "partNumber": "SEAL-A320", "revision": "C" },
+    { "number": "PO-2026-411", "partNumber": "BRACKET-42", "revision": "B" }
+  ]
+}

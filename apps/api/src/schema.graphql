@@ -1,0 +1,227 @@
+enum Stage {
+  INITIATION
+  CONTAINMENT
+  MRB_REVIEW
+  DISPOSITION
+  EXECUTION
+  CLOSURE
+  CLOSED
+}
+enum Severity {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+enum Disposition {
+  SCRAP
+  REWORK
+  REPAIR
+  USE_AS_IS
+  RTV
+}
+enum Role {
+  INSPECTOR
+  PRODUCTION
+  ENGINEERING
+  MRB
+  QUALITY
+}
+
+type Site {
+  id: ID!
+  code: String!
+  name: String!
+  country: String!
+}
+type Supplier {
+  id: ID!
+  code: String!
+  name: String!
+  status: String!
+}
+type Certificate {
+  id: ID!
+  number: String!
+  type: String!
+  issuedAt: String!
+  url: String!
+}
+type Hold {
+  active: Boolean!
+  reason: String!
+  placedAt: String!
+  placedByRole: Role!
+}
+type Operation {
+  step: Int!
+  name: String!
+  status: String!
+}
+type WorkOrder {
+  id: ID!
+  number: String!
+  site: Site!
+  orderRef: String!
+  partNumber: String!
+  revision: String!
+  operations: [Operation!]!
+  lots: [Lot!]!
+  consumedLots: [Consumption!]!
+  hold: Hold
+  serials: [Serial!]!
+}
+
+type Consumption {
+  lotId: ID!
+  qty: Float!
+}
+type Serial {
+  id: ID!
+  serialNumber: String!
+  site: Site!
+  partNumber: String!
+  hold: Hold
+}
+type Lot {
+  id: ID!
+  lotNumber: String!
+  partNumber: String!
+  supplier: Supplier!
+  certificate: Certificate
+  receivedAt: String!
+  hold: Hold
+  workOrders: [WorkOrder!]!
+  serials: [Serial!]!
+  ncrs: [Ncr!]!
+}
+type AvailableAction {
+  action: String!
+  allowed: Boolean!
+  blockedBy: [String!]!
+}
+type AuditEvent {
+  id: ID!
+  seq: Int!
+  type: String!
+  actorRole: Role!
+  actorUsername: String
+  reason: String
+  at: String!
+  workflowVersion: Int
+  action: String
+  fromStage: Stage
+  toStage: Stage
+}
+type MrbApproval {
+  role: Role!
+  at: String!
+}
+type Ncr {
+  id: ID!
+  number: String!
+  site: Site!
+  stage: Stage!
+  state: String!
+  severity: Severity!
+  workflowVersion: Int!
+  partNumber: String!
+  revision: String!
+  workOrder: WorkOrder!
+  operationStep: Int!
+  defectCode: String!
+  detectionSource: String!
+  quantityAffected: Int!
+  lot: Lot
+  serials: [Serial!]!
+  evidence: [String!]!
+  containmentAction: String
+  disposition: Disposition
+  engineeringInstructions: String
+  mrbApproval: MrbApproval
+  verificationNote: String
+  stageEnteredAt: String!
+  lastEventSeq: Int!
+  availableActions: [AvailableAction!]!
+  events: [AuditEvent!]!
+}
+type StageCount {
+  stage: Stage!
+  count: Int!
+}
+type OperationsOverview {
+  openNcrCount: Int!
+  stageCounts: [StageCount!]!
+  ncrs: [Ncr!]!
+  heldLots: [Lot!]!
+  staleNcrs: [Ncr!]!
+  staleDays: Int!
+}
+type Part {
+  partNumber: String!
+  description: String!
+  revisions: [String!]!
+}
+type PurchaseOrder {
+  number: String!
+  partNumber: String!
+  revision: String!
+}
+type ErpCatalog {
+  parts: [Part!]!
+  purchaseOrders: [PurchaseOrder!]!
+}
+type ContainSiteCount {
+  site: Site!
+  workOrders: Int!
+  serials: Int!
+}
+type ContainResult {
+  lotsPlacedOnHold: Int!
+  bySite: [ContainSiteCount!]!
+}
+
+input CreateNcrInput {
+  workOrderId: ID!
+  operationStep: Int!
+  lotId: ID
+  serialIds: [ID!]
+  severity: Severity!
+  defectCode: String!
+  detectionSource: String!
+  quantityAffected: Int!
+  evidence: [String!]
+}
+input TransitionPayloadInput {
+  reason: String
+  evidence: [String!]
+  containmentAction: String
+  disposition: Disposition
+  engineeringInstructions: String
+  verificationNote: String
+}
+input TransitionNcrInput {
+  ncrId: ID!
+  action: String!
+  expectedSeq: Int!
+  payload: TransitionPayloadInput!
+}
+input ContainLotInput {
+  lotNumber: String!
+  reason: String!
+  sourceNcrId: ID
+}
+
+type Query {
+  operationsOverview(siteId: ID, severity: Severity): OperationsOverview!
+  ncrs(siteId: ID, stage: Stage, severity: Severity): [Ncr!]!
+  ncr(id: ID!): Ncr
+  lotThread(lotNumber: String!): Lot
+  sites: [Site!]!
+  workOrders(siteId: ID): [WorkOrder!]!
+  erpCatalog: ErpCatalog!
+}
+type Mutation {
+  createNcr(input: CreateNcrInput!): Ncr!
+  transitionNcr(input: TransitionNcrInput!): Ncr!
+  containLot(input: ContainLotInput!): ContainResult!
+}

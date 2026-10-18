@@ -1,0 +1,50 @@
+{
+  "name": "ncr-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A multi-site non-conformance workflow demo for AeroSeal Industries.",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22.15.0 <23",
+    "npm": ">=10.9.3"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm run dev -w @ncr-flow/api\" \"npm run dev -w @ncr-flow/web\"",
+    "demo": "npm run codegen && npm run demo -w @ncr-flow/api",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "npm run codegen -- --watch",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier . --write --ignore-unknown",
+    "format:check": "prettier . --check --ignore-unknown",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "seed": "npm run seed -w @ncr-flow/api",
+    "build": "npm run build --workspaces",
+    "check": "npm run codegen && npm run typecheck && npm run lint && npm run format:check && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@graphql-codegen/cli": "7.4.6",
+    "@graphql-codegen/client-preset": "6.2.3",
+    "@graphql-codegen/typescript": "6.1.2",
+    "@graphql-codegen/typescript-resolvers": "6.1.1",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "^16.0.0",
+    "jsdom": "27.4.0",
+    "mongodb-memory-server": "^11.0.0",
+    "prettier": "3.6.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.0.0",
+    "vite": "8.3.4",
+    "vitest": "^4.0.0"
+  }
+}
